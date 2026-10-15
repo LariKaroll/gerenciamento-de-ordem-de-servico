@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: user_db
+    environment:
+      POSTGRES_DB: ${DB_USER_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_USER_PORT}:5432"
+    volumes:
+      - pgdata_user:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  postgres-os:
+    image: postgres:15-alpine
+    container_name: os_db
+    environment:
+      POSTGRES_DB: ${DB_OS_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_OS_PORT}:5432"
+    volumes:
+      - pgdata_os:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  postgres-notification:
+    image: postgres:15-alpine
+    container_name: notification_db
+    environment:
+      POSTGRES_DB: ${DB_NOTIFICATION_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_NOTIFICATION_PORT}:5432"
+    volumes:
+      - pgdata_os:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata_user:
+  pgdata_os:
+  postgres-notification:
