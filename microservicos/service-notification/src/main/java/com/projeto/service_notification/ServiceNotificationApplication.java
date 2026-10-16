@@ -1,13 +1,13 @@
-package com.projeto.service_user;
+package com.projeto.service_notification;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ServiceUserApplication {
+public class ServiceNotificationApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ServiceUserApplication.class, args);
+		SpringApplication.run(ServiceNotificationApplication.class, args);
 	}
 
 }
