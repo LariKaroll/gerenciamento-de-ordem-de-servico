@@ -1,5 +1,7 @@
 package com.projeto.service_user.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,9 +55,10 @@ public class UsuarioService {
         String cpfTratado = requestDTO.cpf().trim();
         String emailTratado = requestDTO.email().trim().toLowerCase();
         String telefoneTratado = requestDTO.telefone().trim();
-        
+
         if (requestDTO.perfil() == PerfilUsuario.ADMINISTRADOR) {
-            throw new RegraDeNegocioException("Este fluxo de cadastro só aceita a criação de perfis operacionais (técnicos e auditores).");
+            throw new RegraDeNegocioException(
+                    "Este fluxo de cadastro só aceita a criação de perfis operacionais (técnicos e auditores).");
         }
 
         if (repository.existsByCpf(cpfTratado)) {
@@ -66,11 +69,19 @@ public class UsuarioService {
             throw new ConflitoException("O e-mail informado já está cadastrado no sistema.");
         }
 
-        Usuario user = toEntity(requestDTO,nomeTratado,cpfTratado,emailTratado,telefoneTratado);
+        Usuario user = toEntity(requestDTO, nomeTratado, cpfTratado, emailTratado, telefoneTratado);
 
-        Usuario userSalvo = repository.save(user);
-        
+        Usuario userSalvo = repository.saveAndFlush(user);
+
         return toResponseDTO(userSalvo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioResponseDTO> listarUsuario() {
+        return repository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
 }
