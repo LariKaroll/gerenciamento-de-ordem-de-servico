@@ -3,6 +3,7 @@ package com.projeto.service_user.dto;
 import org.hibernate.validator.constraints.br.CPF;
 
 import com.projeto.service_user.model.enums.PerfilUsuario;
+import com.projeto.service_user.validation.SenhaDiferenteNome;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@SenhaDiferenteNome 
 public record UsuarioRequestDTO(
     @NotBlank(message = "O nome é obrigatório")
     @Size(max = 120)

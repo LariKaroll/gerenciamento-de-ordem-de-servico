@@ -4,33 +4,31 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.projeto.service_user.config.PasswordEncoderConfig;
 import com.projeto.service_user.dto.UsuarioRequestDTO;
 import com.projeto.service_user.dto.UsuarioResponseDTO;
+import com.projeto.service_user.exception.ConflitoException;
+import com.projeto.service_user.exception.RegraDeNegocioException;
 import com.projeto.service_user.model.Usuario;
 import com.projeto.service_user.model.enums.PerfilUsuario;
 import com.projeto.service_user.repository.UsuarioRepository;
 
-
-
-@Service 
+@Service
 public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository repository;
-
 
     public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    private Usuario toEntity(UsuarioRequestDTO dto) {
+    private Usuario toEntity(UsuarioRequestDTO dto, String nome, String cpf, String email, String telefone) {
         Usuario user = new Usuario();
-    
-        user.setNome(dto.nome());
-        user.setCpf(dto.cpf());
-        user.setEmail(dto.email());
-        user.setTelefone(dto.telefone());
+
+        user.setNome(nome);
+        user.setCpf(cpf);
+        user.setEmail(email);
+        user.setTelefone(telefone);
         user.setPerfil(dto.perfil());
         user.setSenhaHash(passwordEncoder.encode(dto.senha()));
 
@@ -39,22 +37,40 @@ public class UsuarioService {
 
     private UsuarioResponseDTO toResponseDTO(Usuario user) {
         return new UsuarioResponseDTO(
-            user.getId(), 
-            user.getNome(), 
-            user.getEmail(), 
-            user.getTelefone(), 
-            user.getPerfil(), 
-            user.getOnline(), 
-            user.getAtivo()
-        );
+                user.getId(),
+                user.getNome(),
+                user.getEmail(),
+                user.getTelefone(),
+                user.getPerfil(),
+                user.getOnline(),
+                user.getAtivo());
     }
 
-    @Transactional 
+    @Transactional
     public UsuarioResponseDTO cadastrar(UsuarioRequestDTO requestDTO) {
-        if(requestDTO.perfil() == PerfilUsuario.ADMINISTRADOR) {
-            
-        } 
 
+        String nomeTratado = requestDTO.nome().trim();
+        String cpfTratado = requestDTO.cpf().trim();
+        String emailTratado = requestDTO.email().trim().toLowerCase();
+        String telefoneTratado = requestDTO.telefone().trim();
+        
+        if (requestDTO.perfil() == PerfilUsuario.ADMINISTRADOR) {
+            throw new RegraDeNegocioException("Este fluxo de cadastro só aceita a criação de perfis operacionais (técnicos e auditores).");
+        }
+
+        if (repository.existsByCpf(cpfTratado)) {
+            throw new ConflitoException("O CPF informado já está cadastrado no sistema.");
+        }
+
+        if (repository.existsByEmail(emailTratado)) {
+            throw new ConflitoException("O e-mail informado já está cadastrado no sistema.");
+        }
+
+        Usuario user = toEntity(requestDTO,nomeTratado,cpfTratado,emailTratado,telefoneTratado);
+
+        Usuario userSalvo = repository.save(user);
+        
+        return toResponseDTO(userSalvo);
     }
-    
+
 }
