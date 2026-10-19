@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.projeto.service_user.dto.UsuarioRequestDTO;
 import com.projeto.service_user.dto.UsuarioResponseDTO;
 import com.projeto.service_user.exception.ConflitoException;
@@ -15,7 +14,7 @@ import com.projeto.service_user.model.enums.PerfilUsuario;
 import com.projeto.service_user.repository.UsuarioRepository;
 
 @Service
-public class UsuarioService {
+public class UsuarioService{
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository repository;
 

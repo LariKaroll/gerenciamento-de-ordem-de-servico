@@ -7,6 +7,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +19,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -140,5 +144,27 @@ public class GlobalExceptionHandler {
                 "Erro Interno do Servidor",
                 "Ocorreu um erro interno inesperado no servidor. Por favor, tente novamente mais tarde.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
+    }
+
+    @ExceptionHandler({ BadCredentialsException.class, UsernameNotFoundException.class })
+    public ResponseEntity<Map<String, Object>> handleBadCredentials() {
+        Map<String, Object> body = Map.of(
+                "status", HttpStatus.UNAUTHORIZED.value(),
+                "erro", "Não autorizado",
+                "mensagem", "E-mail/CPF ou senha incorretos." // Mensagem única e segura contra enumeração
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<Map<String, Object>> handleDisabledAccount() {
+        Map<String, Object> body = Map.of(
+                "status", HttpStatus.UNAUTHORIZED.value(),
+                "erro", "Acesso bloqueado",
+                "mensagem", "Esta conta de usuário está desativada no sistema."
+        // Nota: Revela que o usuário existe, mas é essencial para o fluxo de suporte do
+        // sistema interno.
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 }
