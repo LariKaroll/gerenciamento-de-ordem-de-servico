@@ -16,6 +16,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
@@ -160,6 +161,19 @@ public class GlobalExceptionHandler {
                 "Seu perfil não possui autorização para acessar este recurso."
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroResposta> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String mensagem = String.format("O valor '%s' não é válido para o parâmetro '%s'.", 
+                ex.getValue(), ex.getName());
+        
+        if (ex.getRequiredType() != null && ex.getRequiredType().isEnum()) {
+            mensagem = String.format("Perfil de usuário inválido. Valores aceitos: ADMINISTRADOR, AUDITOR, TECNICO.");
+        }
+
+        ErroResposta erro = ErroResposta.criar(HttpStatus.BAD_REQUEST, "Parâmetro de Requisição Inválido", mensagem);
+        return ResponseEntity.badRequest().body(erro);
     }
 
     @ExceptionHandler(Exception.class)

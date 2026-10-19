@@ -24,7 +24,7 @@ public class AuthService {
     }
 
     public TokenResponseDTO autenticar(LoginRequestDTO dados) {
-        String loginNormalizado = LoginNormalizer.normalizer(dados.login());
+        String loginNormalizado = LoginNormalizer.normalizar(dados.login());
 
         UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(loginNormalizado, dados.senha());

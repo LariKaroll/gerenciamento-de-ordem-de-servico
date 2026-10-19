@@ -5,10 +5,6 @@ public final class LoginNormalizer {
     private LoginNormalizer() {
     }
 
-    public static String normalizer(String login) {
-        return normalizar(login);
-    }
-
     public static String normalizar(String login) {
         if (login == null) {
             return "";

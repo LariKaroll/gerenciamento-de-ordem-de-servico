@@ -1,8 +1,10 @@
 package com.projeto.service_user.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +16,15 @@ import com.projeto.service_user.model.Usuario;
 import com.projeto.service_user.model.enums.PerfilUsuario;
 import com.projeto.service_user.repository.UsuarioRepository;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 @Service
 public class UsuarioService{
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository repository;
+    private static final Set<String> CAMPOS_ORDENACAO_PERMITIDOS = Set.of("nome", "criadoEm", "email");
+    private static final int TAMANHO_MAXIMO_PAGINA = 50;
 
     public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
@@ -87,11 +94,23 @@ public class UsuarioService{
     @Transactional(readOnly = true)
     public Page<UsuarioResponseDTO> listarUsuariosPaginados(
             String nome, 
-            com.projeto.service_user.model.enums.PerfilUsuario perfil, 
+            PerfilUsuario perfil, 
             Boolean ativo, 
-            org.springframework.data.domain.Pageable paginacao) {
+            Pageable paginacao) {
 
-        return repository.findComFiltros(nome, perfil, ativo, paginacao)
+        Sort sortIdoneo = Sort.unsorted();
+        for (Sort.Order order : paginacao.getSort()) {
+            if (CAMPOS_ORDENACAO_PERMITIDOS.contains(order.getProperty())) {
+                sortIdoneo = sortIdoneo.and(Sort.by(order.getDirection(), order.getProperty()));
+            } else {
+                sortIdoneo = sortIdoneo.and(Sort.by(Sort.Direction.ASC, "nome"));
+            }
+        }
+
+        int tamanhoPagina = Math.min(paginacao.getPageSize(), TAMANHO_MAXIMO_PAGINA);
+        Pageable paginacaoSegura = PageRequest.of(paginacao.getPageNumber(), tamanhoPagina, sortIdoneo);
+
+        return repository.findComFiltros(nome, perfil, ativo, paginacaoSegura)
                 .map(this::toResponseDTO);
     }
 
