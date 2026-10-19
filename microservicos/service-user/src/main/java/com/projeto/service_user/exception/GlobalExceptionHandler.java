@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,7 +20,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -104,15 +104,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResposta> handleDataIntegrity(DataIntegrityViolationException ex) {
-
         if (ex.getCause() instanceof ConstraintViolationException constraintEx) {
             String sqlState = constraintEx.getSQLState();
             String constraintName = constraintEx.getConstraintName() != null
                     ? constraintEx.getConstraintName().toLowerCase()
                     : "";
 
-            // Código padrão ANSI/PostgreSQL/H2 para violação de unicidade (Unique Key) é
-            // 23505
             if ("23505".equals(sqlState) || constraintName.contains("uk_") || constraintName.contains("unique")) {
                 String mensagem = "Não foi possível salvar o registro devido a uma duplicidade de dados cadastrais.";
 
@@ -135,6 +132,36 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
     }
 
+    @ExceptionHandler({ BadCredentialsException.class, UsernameNotFoundException.class })
+    public ResponseEntity<ErroResposta> handleBadCredentials() {
+        ErroResposta erro = ErroResposta.criar(
+                HttpStatus.UNAUTHORIZED, 
+                "Não autorizado", 
+                "E-mail/CPF ou senha incorretos."
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErroResposta> handleDisabledAccount() {
+        ErroResposta erro = ErroResposta.criar(
+                HttpStatus.UNAUTHORIZED, 
+                "Acesso bloqueado", 
+                "Esta conta de usuário está desativada no sistema."
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErroResposta> handleAccessDenied() {
+        ErroResposta erro = ErroResposta.criar(
+                HttpStatus.FORBIDDEN, 
+                "Proibido", 
+                "Seu perfil não possui autorização para acessar este recurso."
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResposta> handleErrosGlobais(Exception ex) {
         logger.error("Erro crítico inesperado na API: ", ex);
@@ -144,27 +171,5 @@ public class GlobalExceptionHandler {
                 "Erro Interno do Servidor",
                 "Ocorreu um erro interno inesperado no servidor. Por favor, tente novamente mais tarde.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
-    }
-
-    @ExceptionHandler({ BadCredentialsException.class, UsernameNotFoundException.class })
-    public ResponseEntity<Map<String, Object>> handleBadCredentials() {
-        Map<String, Object> body = Map.of(
-                "status", HttpStatus.UNAUTHORIZED.value(),
-                "erro", "Não autorizado",
-                "mensagem", "E-mail/CPF ou senha incorretos." // Mensagem única e segura contra enumeração
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
-    }
-
-    @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<Map<String, Object>> handleDisabledAccount() {
-        Map<String, Object> body = Map.of(
-                "status", HttpStatus.UNAUTHORIZED.value(),
-                "erro", "Acesso bloqueado",
-                "mensagem", "Esta conta de usuário está desativada no sistema."
-        // Nota: Revela que o usuário existe, mas é essencial para o fluxo de suporte do
-        // sistema interno.
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 }

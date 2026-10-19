@@ -1,6 +1,8 @@
 package com.projeto.service_user.config;
 
 import com.projeto.service_user.model.Usuario;
+import com.projeto.service_user.model.enums.PerfilUsuario;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +17,7 @@ public class UsuarioPrincipal implements UserDetails {
     private final String loginUsado;
     private final String senhaHash;
     private final boolean ativo;
+    private final PerfilUsuario perfil;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public UsuarioPrincipal(Usuario usuario, String loginUsado) {
@@ -22,22 +25,37 @@ public class UsuarioPrincipal implements UserDetails {
         this.loginUsado = loginUsado;
         this.senhaHash = usuario.getSenhaHash();
         this.ativo = usuario.getAtivo();
+        this.perfil = usuario.getPerfil();
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()));
     }
 
-    public UUID getId() { return id; }
+    public UUID getId() { 
+        return id; 
+    }
+
+    public PerfilUsuario getPerfil() {
+        return perfil;
+    }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
+    public Collection<? extends GrantedAuthority> getAuthorities() { 
+        return authorities; 
+    }
 
     @Override
-    public String getPassword() { return senhaHash; }
+    public String getPassword() { 
+        return senhaHash; 
+    }
 
     @Override
-    public String getUsername() { return loginUsado; }
+    public String getUsername() { 
+        return loginUsado; 
+    }
 
     @Override
-    public boolean isEnabled() { return ativo; } // Vincula diretamente a conta desativada
+    public boolean isEnabled() { 
+        return ativo; 
+    }
 
     @Override
     public boolean isAccountNonExpired() { return true; }

@@ -43,21 +43,25 @@ public class JwtUtil {
     }
 
     public TokenDados extrairEValidarToken(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(signingKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+    try {
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
 
-            UUID id = UUID.fromString(claims.getSubject());
-            String perfil = claims.get("perfil", String.class);
-            
-            return new TokenDados(id, perfil, true);
-        } catch (JwtException | IllegalArgumentException e) {
+        String subject = claims.getSubject();
+        String perfil = claims.get("perfil", String.class);
+
+        if (subject == null || perfil == null) {
             return new TokenDados(null, null, false);
         }
+
+        return new TokenDados(UUID.fromString(subject), perfil, true);
+    } catch (Exception e) { 
+        return new TokenDados(null, null, false);
     }
+}
 
     public record TokenDados(UUID id, String perfil, boolean valido) {}
 }
