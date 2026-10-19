@@ -37,10 +37,10 @@ services:
     ports:
       - "${DB_NOTIFICATION_PORT}:5432"
     volumes:
-      - pgdata_os:/var/lib/postgresql/data
+      - pgdata_notification:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
   pgdata_user:
   pgdata_os:
-  postgres-notification:
+  pgdata_notification:
