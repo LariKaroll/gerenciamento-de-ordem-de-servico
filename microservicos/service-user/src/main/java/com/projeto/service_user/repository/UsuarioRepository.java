@@ -7,7 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.projeto.service_user.model.Usuario;
+
 import java.util.Optional;
+
+import org.springframework.data.domain.Pageable;
+
+import com.projeto.service_user.model.enums.PerfilUsuario;
 
 
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
@@ -16,15 +21,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     boolean existsByEmail(String email);
     boolean existsByCpf(String cpf);
     Optional<Usuario> findByEmailOrCpf(String email, String cpf);
-    @Query("""
-        SELECT u FROM Usuario u 
-        WHERE (:nome IS NULL OR LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')))
-          AND (:perfil IS NULL OR u.perfil = :perfil)
-          AND (:ativo IS NULL OR u.ativo = :ativo)
-    """)
+    @Query(value = "SELECT * FROM usuarios WHERE " +
+       "(:nome IS NULL OR nome ILIKE CONCAT('%', :nome, '%')) AND " +
+       "(:perfil IS NULL OR perfil = CAST(:perfil AS character varying)) AND " +
+       "(:ativo IS NULL OR ativo = :ativo) " +
+       "ORDER BY nome ASC", 
+       nativeQuery = true)
     Page<Usuario> findComFiltros(
             String nome, 
-            com.projeto.service_user.model.enums.PerfilUsuario perfil, 
+            PerfilUsuario perfil, 
             Boolean ativo, 
-            org.springframework.data.domain.Pageable paginacao);
+            Pageable paginacao);
 }
