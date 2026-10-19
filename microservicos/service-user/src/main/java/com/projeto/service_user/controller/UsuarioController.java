@@ -1,7 +1,6 @@
 package com.projeto.service_user.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
