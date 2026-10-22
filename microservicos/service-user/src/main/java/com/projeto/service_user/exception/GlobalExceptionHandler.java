@@ -97,8 +97,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(erro);
     }
 
-    @ExceptionHandler(RegraDeNegocioException.class)
-    public ResponseEntity<ErroResposta> handleConflito(RegraDeNegocioException ex) {
+    @ExceptionHandler(ConflitoException.class)
+    public ResponseEntity<ErroResposta> handleConflito(ConflitoException ex) {
         ErroResposta erro = ErroResposta.criar(HttpStatus.CONFLICT, "Conflito de Dados", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(erro);
     }
