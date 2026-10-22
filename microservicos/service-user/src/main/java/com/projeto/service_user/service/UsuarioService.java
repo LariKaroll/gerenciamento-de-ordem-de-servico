@@ -1,7 +1,6 @@
 package com.projeto.service_user.service;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,13 +17,12 @@ import com.projeto.service_user.repository.UsuarioRepository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
-public class UsuarioService{
+public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository repository;
-    private static final Set<String> CAMPOS_ORDENACAO_PERMITIDOS = Set.of("nome", "criadoEm", "email");
-    private static final int TAMANHO_MAXIMO_PAGINA = 50;
 
     public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
@@ -92,26 +90,38 @@ public class UsuarioService{
     }
 
     @Transactional(readOnly = true)
-    public Page<UsuarioResponseDTO> listarUsuariosPaginados(
-            String nome, 
-            PerfilUsuario perfil, 
-            Boolean ativo, 
-            Pageable paginacao) {
+    public Page<UsuarioResponseDTO> buscaAvancadaUsuario(
+            String nome,
+            PerfilUsuario perfil,
+            Boolean ativo,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
 
-        Sort sortIdoneo = Sort.unsorted();
-        for (Sort.Order order : paginacao.getSort()) {
-            if (CAMPOS_ORDENACAO_PERMITIDOS.contains(order.getProperty())) {
-                sortIdoneo = sortIdoneo.and(Sort.by(order.getDirection(), order.getProperty()));
-            } else {
-                sortIdoneo = sortIdoneo.and(Sort.by(Sort.Direction.ASC, "nome"));
-            }
+        Sort sort = "desc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Usuario> spec = Specification.anyOf();
+
+        if (nome != null && !nome.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("nome")), "%" + nome.toLowerCase() + "%"));
         }
 
-        int tamanhoPagina = Math.min(paginacao.getPageSize(), TAMANHO_MAXIMO_PAGINA);
-        Pageable paginacaoSegura = PageRequest.of(paginacao.getPageNumber(), tamanhoPagina, sortIdoneo);
+        if (perfil != null) {
 
-        return repository.findComFiltros(nome, perfil, ativo, paginacaoSegura)
-                .map(this::toResponseDTO);
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("perfil"), perfil));
+        }
+
+        if (ativo != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("ativo"), ativo));
+        }
+
+        Page<Usuario> paginaEntidades = repository.findAll(spec, pageable);
+
+        return paginaEntidades.map(this::toResponseDTO);
     }
 
 }
