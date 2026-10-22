@@ -1,12 +1,16 @@
 package com.projeto.service_user.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.projeto.service_user.dto.AlterarPerfilDTO;
+import com.projeto.service_user.dto.AlterarSenhaDTO;
 import com.projeto.service_user.dto.UsuarioRequestDTO;
 import com.projeto.service_user.dto.UsuarioResponseDTO;
 import com.projeto.service_user.exception.RegraDeNegocioException;
@@ -123,4 +127,31 @@ public class UsuarioService {
         return paginaEntidades.map(this::toResponseDTO);
     }
 
+    public UsuarioResponseDTO alterarSenha(UUID id, AlterarSenhaDTO dto) {
+        return repository.findById(id).map(u -> {
+            String senhaCriptografada = passwordEncoder.encode(dto.novaSenha());
+            u.setSenhaHash(senhaCriptografada);
+
+            Usuario usuarioSalvo = repository.save(u);
+
+            return toResponseDTO(usuarioSalvo);
+        }).orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+    }
+
+    public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {
+        return repository.findById(id).map(u -> {
+            if(dto.nome() != null) {
+                u.setNome(dto.nome());
+            }
+            if(dto.email() != null) {
+                u.setEmail(dto.email());
+            }
+            if(dto.telefone() != null) {
+                u.setTelefone(dto.telefone());
+            }
+
+            Usuario usuarioSalvo = repository.save(u);
+            return toResponseDTO(usuarioSalvo);
+        }).orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+    }
 }
