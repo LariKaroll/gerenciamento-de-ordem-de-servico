@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.projeto.service_user.dto.UsuarioRequestDTO;
 import com.projeto.service_user.dto.UsuarioResponseDTO;
-import com.projeto.service_user.exception.ConflitoException;
 import com.projeto.service_user.exception.RegraDeNegocioException;
 import com.projeto.service_user.model.Usuario;
 import com.projeto.service_user.model.enums.PerfilUsuario;
@@ -67,11 +66,11 @@ public class UsuarioService {
         }
 
         if (repository.existsByCpf(cpfTratado)) {
-            throw new ConflitoException("O CPF informado já está cadastrado no sistema.");
+            throw new RegraDeNegocioException("O CPF informado já está cadastrado no sistema.");
         }
 
         if (repository.existsByEmail(emailTratado)) {
-            throw new ConflitoException("O e-mail informado já está cadastrado no sistema.");
+            throw new RegraDeNegocioException("O e-mail informado já está cadastrado no sistema.");
         }
 
         Usuario user = toEntity(requestDTO, nomeTratado, cpfTratado, emailTratado, telefoneTratado);
