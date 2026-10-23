@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Pattern;
 public record AlterarSenhaDTO(
 
         @NotBlank @NotBlank(message = "A senha é obrigatória") 
-        @Size(min = 8, max = 72, message = "A senha so pode ter no maximo 72 caracteres") 
+        @Size(max = 72, message = "A senha so pode ter no maximo 72 caracteres") 
         String senhaAtual,
 
         @NotBlank(message = "A nova senha não pode estar em branco") 
