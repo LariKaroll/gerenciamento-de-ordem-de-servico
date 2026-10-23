@@ -143,7 +143,7 @@ public class UsuarioService {
         }).orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
     }
 
-    public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {``
+    public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {
         return repository.findById(id).map(u -> {
             if (dto.nome() != null) {
                 u.setNome(dto.nome());
