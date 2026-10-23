@@ -27,6 +27,9 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository repository;
 
+    private static final List<String> COLUNAS_PERMITIDAS_BUSCA = List.of("id", "nome", "email", "criadoEm");
+    private static final int TAMANHO_MAXIMO_PAGINA = 50;
+
     public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
@@ -102,12 +105,19 @@ public class UsuarioService {
             String sortBy,
             String direction) {
 
-        Sort sort = "desc".equalsIgnoreCase(direction)
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<Usuario> spec = Specification.unrestricted();
 
-        Specification<Usuario> spec = Specification.anyOf();
+        int paginaValidada = Math.max(0, page);
+        int tamanhoValidado = Math.max(1, Math.min(size, TAMANHO_MAXIMO_PAGINA));
+
+        String propriedadeOrdenacao = COLUNAS_PERMITIDAS_BUSCA.contains(sortBy) ? sortBy : "nome";
+
+        Sort.Direction direcaoSort = Sort.Direction
+                .fromOptionalString(direction != null ? direction.toUpperCase() : "ASC")
+                .orElse(Sort.Direction.ASC);
+
+        Sort sort = Sort.by(direcaoSort, propriedadeOrdenacao);
+        Pageable pageable = PageRequest.of(paginaValidada, tamanhoValidado, sort);
 
         if (nome != null && !nome.isBlank()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("nome")), "%" + nome.toLowerCase() + "%"));
@@ -127,11 +137,16 @@ public class UsuarioService {
         return paginaEntidades.map(this::toResponseDTO);
     }
 
+    @Transactional
     public UsuarioResponseDTO alterarSenha(UUID id, AlterarSenhaDTO dto) {
         return repository.findById(id).map(u -> {
 
             if (!passwordEncoder.matches(dto.senhaAtual(), u.getSenhaHash())) {
                 throw new RegraDeNegocioException("A senha atual digitada está incorreta");
+            }
+
+            if (dto.novaSenha().toLowerCase().contains(u.getNome().toLowerCase())) {
+                throw new RegraDeNegocioException("A nova senha não pode conter o seu nome.");
             }
 
             String senhaCriptografada = passwordEncoder.encode(dto.novaSenha());
@@ -143,17 +158,23 @@ public class UsuarioService {
         }).orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
     }
 
+    @Transactional
     public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {
         return repository.findById(id).map(u -> {
-            if (dto.nome() != null) {
-                u.setNome(dto.nome());
+
+            String nomeTratado = dto.nome().trim();
+            String emailTratado = dto.email().trim().toLowerCase();
+            String telefoneTratado = dto.telefone().trim();
+
+            Boolean emailJaCadastradoPorOutroUsuario = repository.existsByEmail(emailTratado)
+                    && !u.getEmail().equalsIgnoreCase(emailTratado);
+            if (emailJaCadastradoPorOutroUsuario) {
+                throw new RegraDeNegocioException("O e-mail informado já está em uso por outro usuário.");
             }
-            if (dto.email() != null) {
-                u.setEmail(dto.email());
-            }
-            if (dto.telefone() != null) {
-                u.setTelefone(dto.telefone());
-            }
+
+            u.setNome(nomeTratado);
+            u.setEmail(emailTratado);
+            u.setTelefone(telefoneTratado);
 
             Usuario usuarioSalvo = repository.save(u);
             return toResponseDTO(usuarioSalvo);

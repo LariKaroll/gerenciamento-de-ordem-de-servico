@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.projeto.service_user.config.UsuarioPrincipal;
 import com.projeto.service_user.dto.AlterarPerfilDTO;
 import com.projeto.service_user.dto.AlterarSenhaDTO;
 import com.projeto.service_user.dto.UsuarioRequestDTO;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -57,7 +55,7 @@ public class UsuarioController {
             @RequestParam(required = false) Boolean ativo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "nome") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
         Page<UsuarioResponseDTO> resultado = service.buscaAvancadaUsuario(nome, perfil, ativo, page, size, sortBy,
                 direction);
@@ -65,19 +63,18 @@ public class UsuarioController {
     }
 
     @PutMapping("/alterar_senha")
-    public ResponseEntity<UsuarioResponseDTO> alterarSenha(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @RequestBody AlterarSenhaDTO senhaDTO) {
+    public ResponseEntity<UsuarioResponseDTO> alterarSenha(@AuthenticationPrincipal UUID usuarioId,
+            @RequestBody @Valid AlterarSenhaDTO senhaDTO) {
 
-        UUID usuarioId = usuarioPrincipal.getId();
-        
         UsuarioResponseDTO responseDTO = service.alterarSenha(usuarioId, senhaDTO);
 
         return ResponseEntity.ok(responseDTO);
     }
 
     @PutMapping("/alterar_perfil")
-    public ResponseEntity<UsuarioResponseDTO> putMethodName(@AuthenticationPrincipal UsuarioPrincipal usuarioPrincipal, @RequestBody AlterarPerfilDTO perfilDTO) {
-        UUID usuarioId = usuarioPrincipal.getId();
-        
+    public ResponseEntity<UsuarioResponseDTO> alterarPerfil(@AuthenticationPrincipal UUID usuarioId,
+            @RequestBody @Valid AlterarPerfilDTO perfilDTO) {
+
         UsuarioResponseDTO responseDTO = service.alterarPerfil(usuarioId, perfilDTO);
 
         return ResponseEntity.ok(responseDTO);

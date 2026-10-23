@@ -9,16 +9,16 @@ import jakarta.validation.constraints.Pattern;
  */
 
 public record AlterarSenhaDTO(
-    
-    @NotBlank(message = "A senha é obrigatória")
-    @Size(max = 72, message = "A senha so pode ter no maximo 72 caracteres")
-    @Pattern (
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>_\\-+=\\[\\]\\\\/~`]).{8,}$",
-        message = "A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um caractere especial e no mínimo 8 caracteres"
-    ) 
-    String novaSenha, 
-    
-    @NotBlank 
-    String senhaAtual
-) {
+
+        @NotBlank @NotBlank(message = "A senha é obrigatória") 
+        @Size(min = 8, max = 72, message = "A senha so pode ter no maximo 72 caracteres") 
+        String senhaAtual,
+
+        @NotBlank(message = "A nova senha não pode estar em branco") 
+        @Size(min = 8, max = 72, message = "A nova senha deve ter entre 8 e 72 caracteres") 
+        @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>_\\-+=\\[\\]\\\\/~`]).{8,}$", 
+                message = "A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um caractere especial e no mínimo 8 caracteres") 
+        String novaSenha
+
+         ){
 }
