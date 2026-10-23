@@ -129,6 +129,11 @@ public class UsuarioService {
 
     public UsuarioResponseDTO alterarSenha(UUID id, AlterarSenhaDTO dto) {
         return repository.findById(id).map(u -> {
+
+            if (!passwordEncoder.matches(dto.senhaAtual(), u.getSenhaHash())) {
+                throw new RegraDeNegocioException("A senha atual digitada está incorreta");
+            }
+
             String senhaCriptografada = passwordEncoder.encode(dto.novaSenha());
             u.setSenhaHash(senhaCriptografada);
 
@@ -138,15 +143,15 @@ public class UsuarioService {
         }).orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
     }
 
-    public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {
+    public UsuarioResponseDTO alterarPerfil(UUID id, AlterarPerfilDTO dto) {``
         return repository.findById(id).map(u -> {
-            if(dto.nome() != null) {
+            if (dto.nome() != null) {
                 u.setNome(dto.nome());
             }
-            if(dto.email() != null) {
+            if (dto.email() != null) {
                 u.setEmail(dto.email());
             }
-            if(dto.telefone() != null) {
+            if (dto.telefone() != null) {
                 u.setTelefone(dto.telefone());
             }
 
